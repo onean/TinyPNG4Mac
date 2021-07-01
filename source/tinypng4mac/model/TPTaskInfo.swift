@@ -54,4 +54,5 @@ enum TPTaskStatus {
 	case downloading
 	case finish
 	case error
+    case retry
 }

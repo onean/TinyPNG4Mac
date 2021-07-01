@@ -47,6 +47,9 @@ class TaskTableCell: NSTableCellView {
 				case .finish:
 					statusText = NSLocalizedString("Finish", comment: "Finish")
 					progress = 6
+                case .retry:
+                    statusText = NSLocalizedString("Retry", comment: "Retry")
+                    progress = 0
 				case .error:
 					statusText = NSLocalizedString("ERROR", comment: "ERROR")
 			}

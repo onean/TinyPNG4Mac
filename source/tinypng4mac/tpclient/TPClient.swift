@@ -15,11 +15,25 @@ protocol TPClientCallback {
 }
 
 class TPClient {
-	let MAX_TASKS: Int = 5
+	let MAX_TASKS: Int = 1
 	let BASE_URL = "https://api.tinify.com/shrink"
 	
 	static let sharedClient = TPClient()
-	static var sApiKey = ""
+    static var sApiKey:String {
+        get {
+            return _sApiKey
+        }
+        set {
+            _sApiKey = newValue
+            sApiKeys.removeAll()
+            let keys = newValue.split(separator: ",").compactMap { "\($0)"}
+            sApiKeys = keys
+            debugPrint(sApiKeys)
+        }
+    }
+    static var _sApiKey = ""
+    static var sApiKeys = [String]()
+    var apiIndex = 0
 	static var sOutputPath = "" {
 		didSet {
 			IOHeler.sOutputPath = sOutputPath
@@ -64,7 +78,8 @@ class TPClient {
 			let fileHandler = try FileHandle(forReadingFrom:task.originFile as URL)
 			imageData = fileHandler.readDataToEndOfFile()
 			
-			let auth = "api:\(TPClient.sApiKey)"
+//			let auth = "api:\(TPClient.sApiKey)"
+            let auth = "api:\(TPClient.sApiKeys[apiIndex])"
 			let authData = auth.data(using: String.Encoding.utf8)?.base64EncodedString(options: NSData.Base64EncodingOptions.lineLength64Characters)
 			let authorizationHeader = "Basic " + authData!
 			
@@ -86,27 +101,36 @@ class TPClient {
 				})
 				.responseJSON(completionHandler: { (response) in
 					if let jsonstr = response.result.value {
-						let json = JSON(jsonstr)
-						if json != JSON.null {
-							if let error = json["error"].string {
-								debugPrint("error: " + task.fileInfo.relativePath + error)
-								self.markError(task, errorMessage: json["message"].string)
-								return
-							}
-							let output = json["output"]
-							if output != JSON.null {
-								let resultUrl = output["url"]
-								task.resultUrl = String(describing: resultUrl)
-								task.resultSize = output["size"].doubleValue
-								task.compressRate = task.resultSize / task.originSize
-								self.onUploadFinish(task)
-							} else {
-								self.markError(task, errorMessage: "response data error")
-							}
-						} else {
-							self.markError(task, errorMessage: "response format error")
-						}
+                        // 当前api key上传超过上限
+                        if response.response?.statusCode == 429 {
+                            if self.apiIndex < TPClient.sApiKeys.count - 1 {
+                                self.apiIndex += 1
+                                self.reexcuteTask(task)
+                            }
+                        }else{
+                            let json = JSON(jsonstr)
+                            if json != JSON.null {
+                                if let error = json["error"].string {
+                                    debugPrint("error: " + task.fileInfo.relativePath + error)
+                                    self.markError(task, errorMessage: json["message"].string)
+                                    return
+                                }
+                                let output = json["output"]
+                                if output != JSON.null {
+                                    let resultUrl = output["url"]
+                                    task.resultUrl = String(describing: resultUrl)
+                                    task.resultSize = output["size"].doubleValue
+                                    task.compressRate = task.resultSize / task.originSize
+                                    self.onUploadFinish(task)
+                                } else {
+                                    self.markError(task, errorMessage: "response data error")
+                                }
+                            } else {
+                                self.markError(task, errorMessage: "response format error")
+                            }
+                        }
 					} else {
+                        
 						self.markError(task, errorMessage: response.result.description)
 					}
 				})
@@ -153,7 +177,12 @@ class TPClient {
 				self.checkExecution()
 			}
 	}
-	
+    
+    fileprivate func reexcuteTask(_ task: TPTaskInfo) {
+        updateStatus(task, newStatus: .retry)
+        checkExecution()
+    }
+    
 	fileprivate func markError(_ task: TPTaskInfo, errorMessage: String?) {
 		task.errorMessage = errorMessage
 		updateStatus(task, newStatus: .error)
@@ -168,7 +197,12 @@ class TPClient {
 			if newStatus == .finish {
 				self.finishTasksCount += 1
 			}
-		}
+        } else {
+            if newStatus == .retry {
+                self.runningTasks -= 1
+                self.queue.enqueue(task)
+            }
+        }
 		callback.taskStatusChanged(task: task)
 	}
 	
