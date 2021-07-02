@@ -36,11 +36,16 @@ brew install --cask tinypng4mac
 
 ### 更新信息
 
+
+**Version 1.0.4**
+
+1. 支持导入多个api key，对超过单个用户数量限制的资源进行压缩
+
+----
+
 **Version 1.0.4**
 
 1. 支持保持原文件权限。 [#11](https://github.com/kyleduo/TinyPNG4Mac/issues/11) 感谢 [PR by @Enoooch](https://github.com/kyleduo/TinyPNG4Mac/pull/40) 
-
-----
 
 **Version 1.0.3**
 
