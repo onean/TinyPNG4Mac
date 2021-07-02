@@ -1,4 +1,4 @@
-# TinyPNG4Mac
+# TinyPNG4Mac-multiple-account
 
 ![preview](./preview/preview.png)
 
