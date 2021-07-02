@@ -232,6 +232,7 @@ class MainViewController: NSViewController, NSOpenSavePanelDelegate, NSTableView
             )
 			tasks.append(task)
 		}
+        tasks.reverse()
 		TPClient.sharedClient.add(tasks)
 		taskTableView.reloadData()
 		TPClient.sharedClient.checkExecution()

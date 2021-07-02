@@ -19,19 +19,13 @@ class TPClient {
 	let BASE_URL = "https://api.tinify.com/shrink"
 	
 	static let sharedClient = TPClient()
-    static var sApiKey:String {
-        get {
-            return _sApiKey
-        }
-        set {
-            _sApiKey = newValue
+    static var sApiKey = "" {
+        didSet {
             sApiKeys.removeAll()
-            let keys = newValue.split(separator: ",").compactMap { "\($0)"}
+            let keys = sApiKey.split(separator: ",").compactMap { "\($0)"}
             sApiKeys = keys
-            debugPrint(sApiKeys)
         }
     }
-    static var _sApiKey = ""
     static var sApiKeys = [String]()
     var apiIndex = 0
 	static var sOutputPath = "" {
@@ -106,6 +100,8 @@ class TPClient {
                             if self.apiIndex < TPClient.sApiKeys.count - 1 {
                                 self.apiIndex += 1
                                 self.reexcuteTask(task)
+                            }else {
+                                self.markError(task, errorMessage: "")
                             }
                         }else{
                             let json = JSON(jsonstr)
