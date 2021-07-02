@@ -38,6 +38,10 @@ Check "Anywhere" in `Preferences -> Security & privacy` if you can not open this
 
 **Version 1.0.4**
 
+1. Support config mutilple api key to compress more than one user limited
+
+**Version 1.0.4**
+
 1. Support reserving origin file's permission. [#11](https://github.com/kyleduo/TinyPNG4Mac/issues/11) Thanks [PR by @Enoooch](https://github.com/kyleduo/TinyPNG4Mac/pull/40) 
 
 ----
